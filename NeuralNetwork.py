@@ -39,6 +39,8 @@ class Network:
     def h(self, x):
         """
         Compute output for input vector x using forward propagation.
+        
+        Returned value is vector in shape of correct output.
         """
         a = x.copy()
         for j in range(1, self.LayersCount):
@@ -48,7 +50,11 @@ class Network:
     def Cost(self, X, y, lmb = 0):
         """
         Compute cost function for inputs matrix X and correct outputs y.
-        lmb is optional regularization parameter. 
+        X and y must be numpy arrays w/ shapes (m, n) and (m, 1) respectively.
+
+        lmb (float)     - regularization parameter.
+
+        Returned value is float.
         """
         m, K = len(y), self.Layers[-1]
         J = -1/m * sum([
@@ -66,8 +72,11 @@ class Network:
     def Grad(self, X, y, lmb = 0):
         """
         Compute gradient of cost function for inputs matrix X and correct outputs y
-        using back propagation. 
-        lmb is optional regularization parameter. 
+        using finite differences.
+        X and y must be numpy arrays w/ shapes (m, n) and (m, 1) respectively.
+
+        lmb (float)     - regularization parameter.
+
         Returned value is in vector form.
         """
         m = len(y)
@@ -107,8 +116,11 @@ class Network:
     def NumGrad(self, X, y, lmb = 0):
         """
         Compute gradient of cost function for inputs matrix X and correct outputs y
-        using finite differences. 
-        lmb is optional regularization parameter. 
+        using finite differences.
+        X and y must be numpy arrays w/ shapes (m, n) and (m, 1) respectively.
+
+        lmb (float)     - regularization parameter.
+
         Returned value is in vector form.
         Recommended to use only for debugging purpose because of slow computations.
         """
@@ -128,17 +140,20 @@ class Network:
 
     def GradDesc(self, X, y, alpha = 0.01, lmb = 0, eps = 1e-4, MaxIter = 400):
         """
-        Perform gradients descent to fit weights for inputs matrix X and correct outputs y.
-        alpha - learning rate
-        lmb - regularization parameter
-        eps - stopping threshold
-        MaxIter - maximum number of iterations
+        Perform gradient descent to fit weights for inputs matrix X and correct outputs y.
+        X and y must be numpy arrays w/ shapes (m, n) and (m, 1) respectively.
+
+        alpha (float)   - learning rate.
+        lmb (float)     - regularization parameter.
+        eps (float)     - stopping threshold.
+        MaxIter (int)   - maximum number of iterations.
+
         Returns array of values of cost functions at each iteration.
         """
         J_hist = []
         # perform gradient descent, but Theta's are unrolled into vector
         for i in range(MaxIter):
-            self.ThetaVec -= alpha*self.Grad(X, y, lmb)
+            self.ThetaVec -= alpha*self.NumGrad(X, y, lmb)
             self.rollTheta()
             print(f"iteration {i+1} \t J = {self.Cost(X, y, lmb)}")
             J_hist.append(self.Cost(X, y, lmb))
@@ -146,4 +161,32 @@ class Network:
                 if abs(J_hist[i] - J_hist[i-1]) < eps:
                     break
         print("--- GradDesc finished ---")
+        return J_hist
+
+    def SGD(self, X, y, BatchSize, alpha = 0.01, eps = 1e-4, MaxIter = 400):
+        """
+        Perform stochastic gradients descent to fit weights for inputs matrix X and correct outputs y.
+        X and y must be numpy arrays w/ shapes (m, n) and (m, 1) respectively.
+
+        BatchSize (int) - size of data batch used to compute gradient.
+        alpha (float)   - learning rate.
+        eps (float)     - stopping threshold.
+        MaxIter (int)   - maximum number of iterations.
+
+        Returns array of values of cost functions at each iteration.
+        """
+        J_hist = []
+        m = len(y)
+        X_shuffle = X.copy()
+        for i in range(MaxIter):
+            np.random.shuffle(X_shuffle)
+            for j in range(0, m, BatchSize):
+                self.ThetaVec -= alpha*self.Grad(X[j:j+BatchSize], y[j:j+BatchSize], lmb = 0)
+                self.rollTheta()
+            print(f"iteration {i+1} \t J = {self.Cost(X, y, lmb = 0)}")
+            J_hist.append(self.Cost(X, y, lmb = 0))
+            if i>0:
+                if abs(J_hist[i] - J_hist[i-1]) < eps:
+                    break
+        print("--- SGD finished ---")
         return J_hist
