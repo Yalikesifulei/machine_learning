@@ -11,13 +11,12 @@ class Network:
         """
         self.LayersCount = len(Layers)
         self.Layers = Layers
-        Theta = []
+        self.Theta = np.empty(self.LayersCount-1, dtype=np.ndarray)
         self.ThetaVec = np.array([])
         for j in range(self.LayersCount-1):
             eps_init = np.sqrt(6)/np.sqrt(self.Layers[j] + self.Layers[j+1])
-            Theta.append(np.random.rand(Layers[j+1], Layers[j]+1)*2*eps_init - eps_init)
-            self.ThetaVec = np.append(self.ThetaVec, np.array(Theta[j]).flatten())
-        self.Theta = np.array(Theta)
+            self.Theta[j] = np.random.rand(Layers[j+1], Layers[j]+1)*2*eps_init - eps_init
+            self.ThetaVec = np.append(self.ThetaVec, self.Theta[j].flatten())
 
     def rollTheta(self):
         """
