@@ -79,13 +79,11 @@ class Network:
         Returned value is in vector form.
         """
         m = len(y)
-        Delta, D, a, delta = [], [], [], [0]*self.LayersCount
+        Delta, D, a, delta = np.empty(self.LayersCount-1, dtype=np.ndarray), np.empty(self.LayersCount-1, dtype=np.ndarray), [], [0]*self.LayersCount
         DVec = np.array([])
         for l in range(self.LayersCount-1):
-            Delta.append(np.zeros_like(self.Theta[l]))
-            D.append(np.zeros_like(self.Theta[l]))
-        Delta = np.array(Delta)
-        D = np.array(D)
+            Delta[l] = np.zeros_like(self.Theta[l])
+            D[l] = np.zeros_like(self.Theta[l])
         for l in self.Layers:
             a.append(np.zeros(l+1))
         a[-1] = np.zeros(self.Layers[-1])
