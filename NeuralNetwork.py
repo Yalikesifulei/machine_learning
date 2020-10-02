@@ -71,7 +71,7 @@ class Network:
     def Grad(self, X, y, lmb = 0):
         """
         Compute gradient of cost function for inputs matrix X and correct outputs y
-        using finite differences.
+        using back propagation.
         X and y must be numpy arrays w/ shapes (m, n) and (m, 1) respectively.
 
         lmb (float)     - regularization parameter.
@@ -150,7 +150,7 @@ class Network:
         J_hist = []
         # perform gradient descent, but Theta's are unrolled into vector
         for i in range(MaxIter):
-            self.ThetaVec -= alpha*self.NumGrad(X, y, lmb)
+            self.ThetaVec -= alpha*self.Grad(X, y, lmb)
             self.rollTheta()
             print(f"iteration {i+1} \t J = {self.Cost(X, y, lmb)}")
             J_hist.append(self.Cost(X, y, lmb))
