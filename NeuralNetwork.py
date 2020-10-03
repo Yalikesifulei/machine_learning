@@ -35,16 +35,26 @@ class Network:
             ind_start += (ind_end - ind_start)
             ind_end += (ind_end - ind_start)
 
-    def predict(self, x):
+    def Predict(self, X):
         """
-        Compute output for input vector x using forward propagation.
+        Compute output for input matrix X using forward propagation.
         
         Returned value is vector in shape of correct output.
         """
-        a = x.copy()
-        for j in range(1, self.LayersCount):
-            a = sigmoid(self.Theta[j-1] @ np.append(1, a))
-        return a
+        a = []
+        m = X.shape[0]
+        for l in self.Layers:
+            a.append(np.zeros((l+1, m)))
+        a[-1] = np.zeros((self.Layers[-1], m))
+        a[0] = np.vstack((np.ones((1, m)), X.T))
+        a = np.array(a)
+
+        for j in range(1, self.LayersCount-1):
+            a[j] = np.vstack((np.ones((1, m)), sigmoid(self.Theta[j-1] @  a[j-1])))
+        a[-1] = sigmoid(self.Theta[-1] @ a[-2])
+
+        return a[-1].T
+        
 
     def Cost(self, X, y, Regularization = 0):
         """
@@ -55,16 +65,12 @@ class Network:
 
         Returned value is float.
         """
-        m, K = len(y), self.Layers[-1]
-        J = -1/m * sum([
-            sum([
-                y[i][k]*(np.log(self.predict(X[i]))[k]) + (1-y[i][k])*(np.log(1-self.predict(X[i]))[k])
-                for k in range(K)
-            ]) for i in range(m) 
-        ])
+        m = len(y)
+        pred = self.Predict(X)
+        J = -1/m * sum(sum(y*np.log(pred) + (1-y)*np.log(1-pred)))
         T = self.Theta.copy()
         for t in T:
-            t[:,0] = 0
+            t[:, 0] = 0
         J += Regularization/(2*m) * sum([np.linalg.norm(t, ord = "fro")**2 for t in T])
         return J
 
@@ -176,12 +182,10 @@ class Network:
         """
         J_hist = []
         m = len(y)
-        X_shuffle = X.copy()
         for i in range(MaxIter):
-            np.random.shuffle(X_shuffle)
-            for j in range(0, m, BatchSize):
-                self.ThetaVec -= LearningRate*self.Grad(X[j:j+BatchSize], y[j:j+BatchSize], Regularization = 0)
-                self.rollTheta()
+            BatchInd = np.random.choice(m, BatchSize, replace = False)
+            self.ThetaVec -= LearningRate*self.Grad(X[BatchInd], y[BatchInd], Regularization = 0)
+            self.rollTheta()
             if i%PrintStep == 0:
                 print(f"iteration {i} \t J = {self.Cost(X, y, Regularization = 0)}")
             J_hist.append(self.Cost(X, y, Regularization = 0))
